@@ -47,7 +47,7 @@ public class TaskController {
 
     // Get tasks relevant to the user
     @GetMapping("/my-tasks")
-    @PreAuthorize("hasRole('MANAGER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('EMPLOYEE') or hasRole('ADMIN')")
     public ResponseEntity<Page<Task>> getMyTasks(
             Authentication authentication,
             @RequestParam(required = false) TaskStatus status,
@@ -63,7 +63,7 @@ public class TaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     public ResponseEntity<?> createTask(@RequestBody TaskRequest taskRequest, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User manager = userRepository.findById(userDetails.getId()).orElseThrow();
@@ -73,7 +73,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER') or hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('EMPLOYEE') or hasRole('ADMIN')")
     public ResponseEntity<?> updateTask(@PathVariable Long id, @RequestBody TaskRequest taskRequest, Authentication authentication) {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();

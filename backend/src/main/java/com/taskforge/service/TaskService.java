@@ -48,14 +48,14 @@ public class TaskService {
     }
 
     @Transactional
-    public Task createTask(TaskRequest request, User manager) {
+    public Task createTask(TaskRequest request, User creator) {
         Task task = new Task();
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setPriority(request.getPriority());
         task.setStatus(TaskStatus.TODO);
         task.setDeadline(request.getDeadline());
-        task.setCreatedBy(manager);
+        task.setCreatedBy(creator);
 
         if (request.getAssignedToId() != null) {
             userService.findById(request.getAssignedToId()).ifPresent(task::setAssignedTo);
@@ -73,11 +73,11 @@ public class TaskService {
             }
         }
 
-        auditLogService.logAction(task, manager, "CREATED_TASK", "Task created by manager");
+        auditLogService.logAction(task, creator, "CREATED_TASK", "Task created by " + creator.getRole());
 
         if (task.getAssignedTo() != null) {
             notificationService.createNotification(task.getAssignedTo(), "You have been assigned a new task: " + task.getTitle());
-            auditLogService.logAction(task, manager, "ASSIGNED_TASK", "Task assigned to user " + task.getAssignedTo().getName());
+            auditLogService.logAction(task, creator, "ASSIGNED_TASK", "Task assigned to user " + task.getAssignedTo().getName());
         }
 
         return task;
