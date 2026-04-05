@@ -125,10 +125,7 @@ public class SecurityConfig {
         ));
 
         // 🔥 IMPORTANT FIX (case-sensitive headers)
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type"
-        ));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
 
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
