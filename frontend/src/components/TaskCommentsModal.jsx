@@ -31,10 +31,17 @@ const TaskCommentsModal = ({ isOpen, onClose, taskId, currentUser }) => {
     fetchHistory();
 
     // 2. Connect WebSocket
+    const getSocketUrl = () => {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+      const backendOrigin = new URL(apiBase).origin;
+      const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+      return backendOrigin.replace(/^https?:/, protocol) + '/ws';
+    };
+
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS(getSocketUrl()),
       reconnectDelay: 5000,
-      debug: (str) => console.log(str),
+      debug: (str) => console.log('[STOMP]', str),
       onConnect: () => {
         setConnected(true);
         // Subscribe to this task's topic
@@ -44,8 +51,17 @@ const TaskCommentsModal = ({ isOpen, onClose, taskId, currentUser }) => {
         });
       },
       onStompError: (frame) => {
-        console.error('Broker reported error: ' + frame.headers['message']);
-        console.error('Additional details: ' + frame.body);
+        setConnected(false);
+        console.error('[STOMP error] Broker reported error:', frame.headers['message']);
+        console.error('[STOMP error] Additional details:', frame.body);
+      },
+      onWebSocketError: (event) => {
+        setConnected(false);
+        console.error('[WebSocket error]', event);
+      },
+      onWebSocketClose: (event) => {
+        setConnected(false);
+        console.warn('[WebSocket closed]', event);
       }
     });
 
@@ -53,7 +69,10 @@ const TaskCommentsModal = ({ isOpen, onClose, taskId, currentUser }) => {
     stompClientRef.current = client;
 
     return () => {
-      client.deactivate();
+      if (client) {
+        client.deactivate();
+      }
+      stompClientRef.current = null;
       setConnected(false);
     };
   }, [isOpen, taskId]);
